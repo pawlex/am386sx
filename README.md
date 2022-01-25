@@ -26,8 +26,8 @@
 
 ### NICE TO HAVES
 - VGA
-- - VGA BIOS
-- - SVGA EXTENTIONS
+-- VGA BIOS
+-- SVGA EXTENTIONS
 - BIOS that boots dos
 - BIOS that boots linux
 - SDCARD for storage
