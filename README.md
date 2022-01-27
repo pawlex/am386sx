@@ -41,3 +41,14 @@
 - PCB design
 
 ## BENEFITS
+
+# Development
+## Part selection
+- FPGA development board
+- CPU
+## PCB / Schematic
+- Number of signals?
+## FPGA Firmware
+- What components are needed to get the CPU to come out of reset and fetch the reset vector?
+## CPU Software
+- Reset fetch / JUMP / NOP
