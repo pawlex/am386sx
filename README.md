@@ -5,8 +5,8 @@
 - Design Constraints
 - Benefits
 
-![Breakout Board Top](AM386_Breakout.png)
-![Breakout Board Bottom](AM386_Breakout_b.png)
+![Breakout Board Top](physical/AM386_Breakout.png)
+![Breakout Board Bottom](physical/AM386_Breakout_b.png)
 
 ## INTRODUCTION
 <p> Implimenting any FPGA independant soft-core processor is difficult.  The complexity, maturity, coding style, software compatability varies wildly from core to core.  x86 isn't going anywhere any time soon for example,  8051 processors are still widly used in embedded designs.  The 80386 32-bit microprocessor is considered by many as the 1st "real" 32-bit microprocessor.  It's paging and protected mode structure continues to this day.</p>
