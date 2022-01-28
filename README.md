@@ -28,44 +28,36 @@
 - Off the shelf compatability with assemblers (FASM)
 
 ### NICE TO HAVES
-    x86 microprocessor (hardware)
-    UART interface
-    Off the shelf compatability with assemblers (FASM)
+ - VGA
+ - -- VGA BIOS
+ - -- SVGA EXTENTIONS
+ - BIOS that boots dos
+ - BIOS that boots linux
+ - SDCARD for storage
+ - GCC
 
-NICE TO HAVES
+### DESIGN CONSTRAINTS
 
-    VGA
-    -- VGA BIOS
-    -- SVGA EXTENTIONS
-    BIOS that boots dos
-    BIOS that boots linux
-    SDCARD for storage
-    GCC
+- 3.3v operation (for use with FPGA and modern memories).
+- low pin count
+- cheap development board compatability. SDRAM?
+- Common parts (AM386-SX still being manufactured)
+- PCB design
 
-DESIGN CONSTRAINTS
+### BENEFITS
+### Development
+### Part selection
 
-    3.3v operation (for use with FPGA and modern memories).
-    low pin count
-    cheap development board compatability. SDRAM?
-    Common parts (AM386-SX still being manufactured)
-    PCB design
+- FPGA development board
+- CPU Selection 
 
-BENEFITS
-Development
-Part selection
+### PCB / Schematic
 
-    FPGA development board
-    CPU
+- Number of signals?
+- FPGA Firmware
 
-PCB / Schematic
+### What components are needed to get the CPU to come out of reset and fetch the reset vector?
 
-    Number of signals?
-
-FPGA Firmware
-
-    What components are needed to get the CPU to come out of reset and fetch the reset vector?
-
-CPU Software
-
-    Reset fetch / JUMP / NOP
+- CPU Software
+- Reset fetch / JUMP / NOP
 
