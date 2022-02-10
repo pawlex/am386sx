@@ -270,10 +270,37 @@ module BeMicro_MAX10_top (
 );
 	
 `ifdef AM386_SX
-	`define AM386_ADDRESS {}
+	// Address 07:00 : BIT0 is masked as all transactions are 2-byte aligned.
+	`define AM386_ADDRESS_L { GPIO_J4_28, GPIO_J4_27, GPIO_J4_23, GPIO_J4_24, GPIO_J4_21, GPIO_J4_22, GPIO_06, 1'bz }
+	// Address 15:08
+	`define AM386_ADDRESS_H { GPIO_J4_38, GPIO_J4_37, GPIO_J4_36, GPIO_J4_35, GPIO_J4_32, GPIO_J4_31, GPIO_J4_30, GPIO_J4_29 }
+	// Address 23:16
+	`define AM386_ADDRESS_X { GPIO_J3_33, GPIO_J3_36, GPIO_J3_38, GPIO_J3_37, GPIO_J3_40, GPIO_J3_39, GPIO_J4_40, GPIO_J4_39 }
+	// Data 15:08
 	`define AM386_DATA_H { GPIO_J3_34, GPIO_J3_31, GPIO_J3_32, GPIO_J3_28, GPIO_J3_27, GPIO_J3_26, GPIO_J3_25, GPIO_J3_24 }
+	// Data 07:00
 	`define AM386_DATA_L { GPIO_J3_23, GPIO_J3_22, GPIO_J3_21, GPIO_J3_20, GPIO_J3_19, GPIO_J3_18, GPIO_J3_17, GPIO_J3_16 }
-	`define AM386_CONTROL {}
+	
+	// Byte enables H&L { BHE#, BLE# }
+	`define AM386_BE { GPIO_05, GPIO_07 }
+	
+	// Input 2X clock
+	`define AM386_CLK { GPIO_09 }
+	// NMI, INTR, RESET
+	`define AM386_INT { GPIO_J4_19, GPIO_J4_20, GPIO_J4_13 }
+	
+	// Bus arbitration
+	// HOLDA(ck), HOLD
+	`define AM386_ARB { GPIO_J3_15, GPIO_J3_14 }
+	
+	// Bus cycle control
+	// LOCK, MIO, DC, WR
+	`define AM386_BCC { GPIO_B, GPIO_04, GPIO_03, GPIO_02 }
+	
+	// CO-PROCESSOR & AUX CONTROL
+	// ERROR, BUSY, PEREQ, FLOAT
+	`define AM386_AUX { GPIO_J4_15, GPIO_J4_14, GPIO_J4_16, GPIO_A }
+
 `endif
 	
 
