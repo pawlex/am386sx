@@ -61,3 +61,5 @@
 - CPU Software
 - Reset fetch / JUMP / NOP
 
+### Reference
+https://web.archive.org/web/20160123145327/https://blog.lse.epita.fr/articles/77-lsepc-intro.html
