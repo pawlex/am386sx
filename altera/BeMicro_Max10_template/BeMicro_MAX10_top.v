@@ -270,18 +270,21 @@ module BeMicro_MAX10_top (
 );
 	
 `ifdef AM386_SX
-	// Address 07:00 : BIT0 is masked as all transactions are 2-byte aligned.
+	// Output Address Bus
+	// Address 07:00 : BIT0 X as all transactions are 2-byte aligned.
 	`define AM386_ADDRESS_L { GPIO_J4_28, GPIO_J4_27, GPIO_J4_23, GPIO_J4_24, GPIO_J4_21, GPIO_J4_22, GPIO_06, 1'bz }
 	// Address 15:08
 	`define AM386_ADDRESS_H { GPIO_J4_38, GPIO_J4_37, GPIO_J4_36, GPIO_J4_35, GPIO_J4_32, GPIO_J4_31, GPIO_J4_30, GPIO_J4_29 }
 	// Address 23:16
 	`define AM386_ADDRESS_X { GPIO_J3_33, GPIO_J3_36, GPIO_J3_38, GPIO_J3_37, GPIO_J3_40, GPIO_J3_39, GPIO_J4_40, GPIO_J4_39 }
+	
+	// Bidirectional data bus
 	// Data 15:08
 	`define AM386_DATA_H { GPIO_J3_34, GPIO_J3_31, GPIO_J3_32, GPIO_J3_28, GPIO_J3_27, GPIO_J3_26, GPIO_J3_25, GPIO_J3_24 }
 	// Data 07:00
 	`define AM386_DATA_L { GPIO_J3_23, GPIO_J3_22, GPIO_J3_21, GPIO_J3_20, GPIO_J3_19, GPIO_J3_18, GPIO_J3_17, GPIO_J3_16 }
 	
-	// Byte enables H&L { BHE#, BLE# } (bidir)
+	// Byte enables H&L { BHE#, BLE# } (output)
 	`define AM386_BE { GPIO_05, GPIO_07 }
 	
 	// Input 2X clock (input)
