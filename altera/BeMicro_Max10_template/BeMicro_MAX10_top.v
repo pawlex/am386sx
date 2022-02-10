@@ -281,24 +281,28 @@ module BeMicro_MAX10_top (
 	// Data 07:00
 	`define AM386_DATA_L { GPIO_J3_23, GPIO_J3_22, GPIO_J3_21, GPIO_J3_20, GPIO_J3_19, GPIO_J3_18, GPIO_J3_17, GPIO_J3_16 }
 	
-	// Byte enables H&L { BHE#, BLE# }
+	// Byte enables H&L { BHE#, BLE# } (bidir)
 	`define AM386_BE { GPIO_05, GPIO_07 }
 	
-	// Input 2X clock
+	// Input 2X clock (input)
 	`define AM386_CLK { GPIO_09 }
-	// NMI, INTR, RESET
+	// NMI, INTR, RESET (input)
 	`define AM386_INT { GPIO_J4_19, GPIO_J4_20, GPIO_J4_13 }
 	
 	// Bus arbitration
-	// HOLDA(ck), HOLD
+	// HOLDA(ck), HOLD (out, in)
 	`define AM386_ARB { GPIO_J3_15, GPIO_J3_14 }
 	
+	// Bus cycle definition 
+	// LOCK, MIO, DC, WR (output)
+	`define AM386_BCD { GPIO_B, GPIO_04, GPIO_03, GPIO_02 }
+	
 	// Bus cycle control
-	// LOCK, MIO, DC, WR
-	`define AM386_BCC { GPIO_B, GPIO_04, GPIO_03, GPIO_02 }
+	// ADS, NA, READY (out, in, in)
+	`define AM386_BCC { GPIO_08, GPIO_11, GPIO_10 }
 	
 	// CO-PROCESSOR & AUX CONTROL
-	// ERROR, BUSY, PEREQ, FLOAT
+	// ERROR, BUSY, PEREQ, FLOAT (input)
 	`define AM386_AUX { GPIO_J4_15, GPIO_J4_14, GPIO_J4_16, GPIO_A }
 
 `endif
