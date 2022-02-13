@@ -1,0 +1,18 @@
+Fitter Status : Successful - Sat Feb 12 23:44:26 2022
+Quartus Prime Version : 21.1.0 Build 842 10/21/2021 SJ Lite Edition
+Revision Name : BeMicro_MAX10_top
+Top-level Entity Name : BeMicro_MAX10_top
+Family : MAX 10
+Device : 10M08DAF484C8GES
+Timing Models : Preliminary
+Total logic elements : 983 / 8,064 ( 12 % )
+    Total combinational functions : 504 / 8,064 ( 6 % )
+    Dedicated logic registers : 805 / 8,064 ( 10 % )
+Total registers : 805
+Total pins : 94 / 250 ( 38 % )
+Total virtual pins : 0
+Total memory bits : 3,712 / 387,072 ( < 1 % )
+Embedded Multiplier 9-bit elements : 0 / 48 ( 0 % )
+Total PLLs : 1 / 2 ( 50 % )
+UFM blocks : 0 / 1 ( 0 % )
+ADC blocks : 0 / 1 ( 0 % )
