@@ -9,16 +9,17 @@ module southbridge(
 	input	 [1:0] be, 		// H, L
 	inout  [23:0] address, // bit0 = x;
 	inout  [15:0] data,
-	`ifdef AUX
-	output [3:0] aux, 	// ERROR, BUSY, PEREQ, FLOAT (input)
-	`endif
-	`ifdef SMI
-	//TBD
-	`endif
-	`ifdef DEBUG
-	output [15:0] debug,
-	`endif
-	output reg status_led
+	//`ifdef AUX
+	//output [3:0] aux, 	// ERROR, BUSY, PEREQ, FLOAT (input)
+	//`endif
+	//`ifdef SMI
+	////TBD
+	//`endif
+	//`ifdef DEBUG
+	//output [15:0] debug,
+	//`endif
+	////
+	output [7:0] status_led
 	//
 );
 
@@ -39,8 +40,8 @@ module southbridge(
 	assign { lock,mio, dc, wr } = bcd[3:0];
 	// ARB
 	wire holda, hold;
-	assign holda = arb[0];
-	assign arb[1] = hold;
+	assign holda = arb[1];
+	assign arb[0] = hold;
 	assign hold = 1'b0;
 	// BE
 	wire beh, bel;
@@ -62,17 +63,17 @@ module southbridge(
 		data_oe 		<= 0;
 		address_ff 	<= 0;
 		data_ff 		<= 0;
-		status_led  <= 0;
 		state 		<= 0;
 	end else begin
 		case(state)
 			0: if(!ads) state <= 1;
-			1: if(ads) 
-			begin
-				if(address == RESET_VECTOR) status_led <= 1; else state <= 0;
-			end
+			1: if(ads)  state <= 2;
+			2: if(address == RESET_VECTOR) state <= 3;
+			default: state <= state;
 		endcase 
 	end
-
-
+	
+	assign status_led[1:0] = state [1:0];
+	assign status_led[3:2] = { holda, hold };
+	
 endmodule

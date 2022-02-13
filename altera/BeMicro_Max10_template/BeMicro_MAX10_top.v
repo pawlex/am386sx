@@ -11,6 +11,8 @@
 /* User Guide."  Please refer to that document for additional signal details. */
 
 `define ENABLE_CLOCK_INPUTS
+`define PLL0
+//`define PLL1
 //`define ENABLE_DAC_SPI_INTERFACE
 //`define ENABLE_TEMP_SENSOR
 //`define ENABLE_ACCELEROMETER
@@ -233,7 +235,7 @@ module BeMicro_MAX10_top (
 	//there are guidelines regarding neighboring pins that must be followed.  
 	//Please refer to the "Using LVDS on the BeMicro MAX 10" document for details.
 	// Voltage Level 3.3V
-	inout GPIO_J4_11,
+	inout GPIO_J4_11, 
 	inout GPIO_J4_12,
 	inout GPIO_J4_13,
 	inout GPIO_J4_14,
@@ -269,9 +271,32 @@ module BeMicro_MAX10_top (
 `endif
 
 );
-	
+
+//`define GPIO_J4_ODD  { GPIO_J4_11, GPIO_J4_13, GPIO_J4_15, GPIO_J4_19, GPIO_J4_21, GPIO_J4_23, GPIO_J4_27, GPIO_J4_29, GPIO_J4_31, GPIO_J4_35, GPIO_J4_37, GPIO_J4_39, }
+//`define GPIO_J4_EVEN { GPIO_J4_12, GPIO_J4_14, GPIO_J4_16, GPIO_J4_20, GPIO_J4_22, GPIO_J4_24, GPIO_J4_28, GPIO_J4_30, GPIO_J4_32, GPIO_J4_36, GPIO_J4_38, GPIO_J4_40, }
+//
+//assign `GPIO_J4_EVEN = {clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0};
+//assign `GPIO_J4_ODD  = {clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0};
+//
+//assign GPIO_A = reset;
+//assign GPIO_B = reset_n;
+
+`ifdef PLL0
+	wire clk80p0, clk40p0, clk20p0, clk10p0, clk2p0, pll0_lock;
+	pll0	pll0_inst 
+	(
+		.inclk0 ( SYS_CLK ),
+		.c0 ( clk80p0 ),
+		.c1 ( clk40p0 ),
+		.c2 ( clk20p0 ),
+		.c3 ( clk10p0 ),
+		.c4 ( clk2p0 ),
+		.locked ( pll0_lock )
+	);
+`endif
+
+//wire am_address_0, am386_status_led;
 `ifdef AM386_SX
-	wire am_address_0;
 	// Output Address Bus
 	// Address 07:00 : BIT0 X as all transactions are 2-byte aligned.
 	`define AM386_ADDRESS_L { GPIO_J4_28, GPIO_J4_27, GPIO_J4_23, GPIO_J4_24, GPIO_J4_21, GPIO_J4_22, GPIO_06, am_address_0 }
@@ -309,27 +334,17 @@ module BeMicro_MAX10_top (
 	// CO-PROCESSOR & AUX CONTROL
 	// ERROR, BUSY, PEREQ, FLOAT (input)
 	`define AM386_AUX { GPIO_J4_15, GPIO_J4_14, GPIO_J4_16, GPIO_A }
-	
-	wire am386_status_led;
-	wire clk80p0, clk40p0, clk20p0, clk10p0, clk2p0, pll0_lock;
+	//
+	//
+	wire am_address_0;
+	wire [7:0] am386_status_led;
 	assign `AM386_CLK = clk2p0;
-	assign `AM386_INT = { clk2p0, clk10p0, reset};
-	
-	pll0	pll0_inst 
-	(
-		.inclk0 ( SYS_CLK ),
-		.c0 ( clk80p0 ),
-		.c1 ( clk40p0 ),
-		.c2 ( clk20p0 ),
-		.c3 ( clk10p0 ),
-		.c4 ( clk2p0 ),
-		.locked ( pll0_lock )
-	);
+	//
 	southbridge sb 
 	(
 		.clk(`AM386_CLK),
 		.reset_n(reset_n),
-		.int(),//`AM386_INT),		// NMI, INTR, RESET
+		.int(`AM386_INT),		// NMI, INTR, RESET
 		.bcc(`AM386_BCC),		// ADS, NA, READY (out, in, in)
 		.bcd(`AM386_BCD),		// LOCK, MIO, DC, WR
 		.arb(`AM386_ARB), 	// HOLDA(ck), HOLD (out, in)
@@ -340,7 +355,6 @@ module BeMicro_MAX10_top (
 	);
 
 `endif
-	
 
 `ifdef ENABLE_CHIPSCOPE
 	`define DEBUG_LO { GPIO_08, GPIO_07, GPIO_06,    GPIO_05,    GPIO_04,    GPIO_03,    GPIO_02, GPIO_01 }
@@ -382,10 +396,10 @@ always @* begin
 	led_o[6]= 1'b0;
 	led_o[5]= 1'b0;
 	led_o[4]= 1'b0;
-	led_o[3]= 1'b0;
-	led_o[2]= 1'b0;
-	led_o[1]= 1'b0;
-	led_o[0]= am386_status_led;
+	led_o[3]= am386_status_led[3];
+	led_o[2]= am386_status_led[2];
+	led_o[1]= am386_status_led[1];
+	led_o[0]= am386_status_led[0];
 end
 
 

@@ -5,14 +5,11 @@
 set_time_format -unit ns -decimal_places 3
 
 
-
 #**************************************************************
 # Create Clock
 #**************************************************************
 
 create_clock -name {SYS_CLK} -period 20.000 -waveform { 0.000 10.000 } [get_ports {SYS_CLK}]
-create_clock -name {USER_CLK} -period 41.667 -waveform { 0.000 20.803 } [get_ports {USER_CLK}]
-
 
 
 #**************************************************************
@@ -55,7 +52,6 @@ create_clock -name {USER_CLK} -period 41.667 -waveform { 0.000 20.803 } [get_por
 # Set False Path
 #**************************************************************
 
-set_false_path -to [get_pins -nocase -compatibility_mode {*|alt_rst_sync_uq1|altera_reset_synchronizer_int_chain*|clrn}]
 
 #**************************************************************
 # Set Multicycle Path
