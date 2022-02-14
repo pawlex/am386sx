@@ -68,7 +68,7 @@ module southbridge(
 		case(state)
 			0: if(!ads) state <= 1;
 			1: if(ads)  state <= 2;
-			2: if(address == RESET_VECTOR) state <= 3;
+			2: if(address[23:1] == RESET_VECTOR[23:1]) state <= 3;
 			default: state <= state;
 		endcase 
 	end

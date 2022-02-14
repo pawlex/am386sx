@@ -12,7 +12,7 @@
 
 `define ENABLE_CLOCK_INPUTS
 `define PLL0
-//`define PLL1
+`define PLL1
 //`define ENABLE_DAC_SPI_INTERFACE
 //`define ENABLE_TEMP_SENSOR
 //`define ENABLE_ACCELEROMETER
@@ -295,6 +295,18 @@ module BeMicro_MAX10_top (
 	);
 `endif
 
+`ifdef PLL1
+	wire clk0012p0, pll1_lock;
+	pll1	pll1_inst 
+	(
+		.inclk0 ( SYS_CLK ),
+		.c0 ( clk0012p0 ),  // 1.2KHz 0-deg phase
+		.locked ( pll1_lock )
+	);
+`endif
+
+
+
 //wire am_address_0, am386_status_led;
 `ifdef AM386_SX
 	// Output Address Bus
@@ -321,7 +333,7 @@ module BeMicro_MAX10_top (
 	
 	// Bus arbitration
 	// HOLDA(ck), HOLD (out, in)
-	`define AM386_ARB { GPIO_J3_15, GPIO_J3_14 }
+	`define AM386_ARB { GPIO_J3_15, GPIO_12 }
 	
 	// Bus cycle definition 
 	// LOCK, MIO, DC, WR (output)
@@ -338,7 +350,7 @@ module BeMicro_MAX10_top (
 	//
 	wire am_address_0;
 	wire [7:0] am386_status_led;
-	assign `AM386_CLK = clk2p0;
+	assign `AM386_CLK = clk0012p0;
 	//
 	southbridge sb 
 	(
