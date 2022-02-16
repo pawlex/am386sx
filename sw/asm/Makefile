@@ -4,7 +4,7 @@ rom_fffc00.hex:	rom_fffc00.asm
 	nasm -f ith rom_fffc00.asm -o rom_fffc00.hex
 
 rom_fffc00.bin: rom_fffc00.asm
-	nasm -f rom_fffc00.asm -o rom_fffc00.bin
+	nasm -f bin rom_fffc00.asm -o rom_fffc00.bin
 
 rom_fffc00.rom:	rom_fffc00.hex
 	intel2readmemh rom_fffc00.hex > rom_fffc00.rom || /bin/true
@@ -23,3 +23,5 @@ reconfigure: altera
 clean:
 	rm -f rom_fffc00 rom_fffc00.hex rom_fffc00.rom rom_fffc00.bin
 
+dis: rom_fffc00.bin
+	ndisasm rom_fffc00.bin | less
