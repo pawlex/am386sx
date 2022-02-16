@@ -1,6 +1,6 @@
 [General]
-decode_signals=0
-meta_objs=1
+decode_signals=2
+meta_objs=0
 views=1
 
 [D0]
@@ -8,168 +8,197 @@ color=4279638298
 conv_options=0
 conversion_type=0
 enabled=true
-name=clk
+name=D0
 
 [D1]
 color=4287582722
 conv_options=0
 conversion_type=0
 enabled=true
-name=rst#
+name=D1
 
 [D10]
 color=4279638298
 conv_options=0
 conversion_type=0
 enabled=true
-name=is_rom
+name=D10
 
 [D11]
 color=4287582722
 conv_options=0
 conversion_type=0
 enabled=true
-name=is_ram
+name=D11
 
 [D12]
 color=4291559424
 conv_options=0
 conversion_type=0
 enabled=true
-name=is_rst_v
+name=D12
 
 [D13]
 color=4294277376
 conv_options=0
 conversion_type=0
 enabled=true
-name=rom_clk
+name=D13
 
 [D14]
 color=4293776384
 conv_options=0
 conversion_type=0
 enabled=true
-name=is_bsy
+name=D14
 
 [D15]
 color=4285780502
 conv_options=0
 conversion_type=0
 enabled=true
-name=is_actv
+name=D15
 
 [D2]
 color=4291559424
 conv_options=0
 conversion_type=0
 enabled=true
-name=ads#
+name=D2
 
 [D3]
 color=4294277376
 conv_options=0
 conversion_type=0
 enabled=true
-name=rdy#
+name=D3
 
 [D4]
 color=4293776384
 conv_options=0
 conversion_type=0
 enabled=true
-name=w/r#
+name=D4
 
 [D5]
 color=4285780502
 conv_options=0
 conversion_type=0
 enabled=true
-name=d/c#
+name=D5
 
 [D6]
 color=4281623972
 conv_options=0
 conversion_type=0
 enabled=true
-name=m/io#
+name=D6
 
 [D7]
 color=4285878395
 conv_options=0
 conversion_type=0
 enabled=true
-name=LOCK#
+name=D7
 
 [D8]
 color=4287138437
 conv_options=0
 conversion_type=0
 enabled=true
-name=BLE#
+name=D8
 
 [D9]
 color=4293848812
 conv_options=0
 conversion_type=0
 enabled=true
-name=BHE#
+name=D9
 
 [decode_signal0]
-channel0\assigned_signal_name=rdy#
+channel0\assigned_signal_name=D0
 channel0\initial_pin_state=2
 channel0\name=CLK
-channel1\assigned_signal_name=D10
 channel1\initial_pin_state=2
 channel1\name=D0
-channel2\assigned_signal_name=D11
+channel2\assigned_signal_name=D1
 channel2\initial_pin_state=2
 channel2\name=D1
-channel3\assigned_signal_name=D12
+channel3\assigned_signal_name=D2
 channel3\initial_pin_state=2
 channel3\name=D2
-channel4\assigned_signal_name=D13
+channel4\assigned_signal_name=D3
 channel4\initial_pin_state=2
 channel4\name=D3
-channel5\assigned_signal_name=D14
+channel5\assigned_signal_name=D4
 channel5\initial_pin_state=2
 channel5\name=D4
-channel6\assigned_signal_name=D15
+channel6\assigned_signal_name=D5
 channel6\initial_pin_state=2
 channel6\name=D5
+channel7\assigned_signal_name=D6
 channel7\initial_pin_state=2
 channel7\name=D6
+channel8\assigned_signal_name=D7
 channel8\initial_pin_state=2
 channel8\name=D7
 channels=9
-color=4285702095
+color=4286753330
 conv_options=0
 conversion_type=0
 decoder0\ann_class0\visible=true
 decoder0\ann_class1\visible=true
 decoder0\id=parallel
-decoder0\option0\name=clock_edge
-decoder0\option0\type=s
-decoder0\option0\value=@ByteArray(falling\0)
-decoder0\options=1
+decoder0\options=0
 decoder0\row0\visible=true
 decoder0\row1\visible=true
 decoder0\visible=true
 decoders=1
 enabled=true
-name=address[5:0]
+name=add[7:1]
 
-[meta_obj0]
-assoc_view=0
-text=A
-time=22 serialization::archive 12 0 0 0 0 2 41018073 86168209 15918560 60613876 52872362 0 1 0 6
-type=time_marker
-
-[meta_obj1]
-assoc_view=0
-end_time=22 serialization::archive 12 0 0 0 0 38412000 0 16981971 38466639 44423197 71355382 -8 0 0 6
-start_time=22 serialization::archive 12 0 0 0 0 3867999 99999999 99105160 24215212 38284185 13002394 -8 0 0 6
-type=selection
+[decode_signal1]
+channel0\assigned_signal_name=D0
+channel0\initial_pin_state=2
+channel0\name=CLK
+channel1\assigned_signal_name=D8
+channel1\initial_pin_state=2
+channel1\name=D0
+channel2\assigned_signal_name=D9
+channel2\initial_pin_state=2
+channel2\name=D1
+channel3\assigned_signal_name=D10
+channel3\initial_pin_state=2
+channel3\name=D2
+channel4\assigned_signal_name=D11
+channel4\initial_pin_state=2
+channel4\name=D3
+channel5\assigned_signal_name=D12
+channel5\initial_pin_state=2
+channel5\name=D4
+channel6\assigned_signal_name=D13
+channel6\initial_pin_state=2
+channel6\name=D5
+channel7\assigned_signal_name=D14
+channel7\initial_pin_state=2
+channel7\name=D6
+channel8\assigned_signal_name=D15
+channel8\initial_pin_state=2
+channel8\name=D7
+channels=9
+color=4281479850
+conv_options=0
+conversion_type=0
+decoder0\ann_class0\visible=true
+decoder0\ann_class1\visible=true
+decoder0\id=parallel
+decoder0\options=0
+decoder0\row0\visible=true
+decoder0\row1\visible=true
+decoder0\visible=true
+decoders=1
+enabled=true
+name=add[23:16]
 
 [view0]
 D0\trace_height=32
@@ -188,9 +217,9 @@ D6\trace_height=32
 D7\trace_height=32
 D8\trace_height=32
 D9\trace_height=32
-offset=22 serialization::archive 12 0 0 0 0 17653 43705511 8639813 81957420 88530528 61614484 -8 0 0 6
-scale=6.7447609871431911e-08
-segment_display_mode=3
-splitter_state=@ByteArray(\0\0\0\xff\0\0\0\x1\0\0\0\x2\0\0\0\x62\0\0\x4\x99\x1\0\0\0\x1\x1\0\0\0\x1\0)
-v_offset=219
+offset=22 serialization::archive 12 0 0 0 0 3121 52145089 34673805 73599156 27375642 88882037 -8 0 0 6
+scale=1.1987707404310574e-08
+segment_display_mode=1
+splitter_state=@ByteArray(\0\0\0\xff\0\0\0\x1\0\0\0\x2\0\0\0v\0\0\x4\x85\x1\0\0\0\x1\x1\0\0\0\x1\0)
+v_offset=-59
 zero_offset=22 serialization::archive 12 0 0 0 0 0 0 0 0 0 0 0 0 0 6

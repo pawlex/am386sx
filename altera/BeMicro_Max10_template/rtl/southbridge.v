@@ -56,16 +56,18 @@ module southbridge(
 	//wire [15:0] data_out;
 	//wire addr_oe, data_oe;
 	reg addr_oe, data_oe;
-	assign address [23:1] = addr_oe ? address_ff [23:1] : 24'hzzzzzz;
+	assign address [23:1] = addr_oe ? address_ff [23:1] : 23'hzzzzzz;
 	//assign address [23:1] = 24'hzzzzzz;
 	//assign address [0]    = 1'b0;
 	//assign data [15:0] 	 = data_oe ? data_ff    : 16'hzzzz;
-	assign data [15:0] = data_oe ? data_wire : 16'hzzzz;
-	
+	wire [15:0] data_wire; wire [15:0] ram_data;
+	assign data			 = is_read 	? data_wire : 16'hzzzz;
+	assign data_wire	 = is_rom 	? rom_data 	: 16'hzzzz;
+	assign data_wire	 = is_ram	? ram_data	: 16'hzzzz;
 
 `ifdef AM386_DEBUG
-	`define AM386_DEBUG_PROTOCOL
-	//`define AM386_DEBUG_ROM_ADDRESS
+	//`define AM386_DEBUG_PROTOCOL
+	`define AM386_DEBUG_ROM_ADDRESS
 	//`define AM386_DEBUG_DATA
 	
 	`ifdef AM386_DEBUG_PROTOCOL
@@ -76,50 +78,26 @@ module southbridge(
 	assign debug[7:4] = bcd[3:0]; // { lock, mio, dc, wr }
 	assign debug[9:8] = be[1:0];  // H,L
 	assign debug[12:10] = { is_reset_vector, is_ram, is_rom };
-	assign debug[15:13] = 0;
+	assign debug[15:13] = { is_active, is_busy, rom_clk };
 	`endif
 	
 	`ifdef AM386_DEBUG_ROM_ADDRESS
-	assign debug[0] = clk;
-	assign debug[1] = reset_n;
-	assign debug[2] = ads;
-	assign debug[3] = ready;
-	assign debug[15:4] = address[9:1];
+	//assign debug[0] = clk;
+	//assign debug[1] = reset_n;
+	//assign debug[2] = ads;
+	//assign debug[3] = ready;
+	//assign debug[15:4] = address[9:1];
+	assign debug[0] = clk & is_active & !is_busy & is_read & is_memory;
+	assign debug[15:1] = { address[23:16],address[7:1] }; // 8 + 7 = 15
 	`endif
 	`ifdef AM386_DEBUG_DATA
-	assign debug[0] = ads;
+	assign debug[0] = is_io & is_write & ~ready;
 	assign debug[15:1] = data[15:1];
 	`endif
 
 `endif
 	
-`ifdef RESET_FETCH
-	// If working properly, LED[1:0] should go to 0b11 indicating the AM386 process tried to fetch
-	// the reset vector
-	reg [1:0] rf_state;
-	
-	always @(posedge clk or negedge reset_n)
-	if(!reset_n) begin
-		addr_oe	 	<= 0;
-		data_oe 		<= 0;
-		address_ff 	<= 0;
-		data_ff 		<= 0;
-		rf_state		<= 0;
-		//ready			<= 1;
-	end else begin
-		case(rf_state)
-			0: if(!ads) rf_state <= 1;
-			1: if(ads)  rf_state <= 2;
-			2: if(address[23:1] == RESET_VECTOR[23:1]) rf_state <= 3;
-			default: rf_state <= rf_state;
-		endcase 
-	end
-	
-	assign status_led[1:0] = rf_state [1:0];
-	assign status_led[3:2] = { holda, hold };
-	
-`else
-	
+
 	// BUS CYCLE PHASE
 	localparam T0  = 4'b0001; // IDLE
 	localparam T1  = 4'b0010; // T1
@@ -147,9 +125,19 @@ module southbridge(
 	localparam ROM_SIZE  = 18'h20000;  // 0b0000_0010_0000_0000_0000_0000
 
 	// Address decode
-	wire is_ram = !address[23];    //  < 0x80_0000
-	wire is_rom = &address[23:17]; // => 0xfe_0000
-
+	wire is_memory, is_io, is_read, is_write, is_control, is_data;
+	assign is_memory 	= mio; 	assign is_io 		= ~mio;
+	assign is_write 	= wr;		assign is_read 	= ~wr; 	
+	assign is_data 	= dc; 	assign is_control = ~dc;
+	assign is_active  = ~(ads & ready) | is_busy;
+	assign is_busy		= ~sm_ph[0];
+	
+	
+	// This needs some work
+	wire is_ram = !address[23] 	& is_memory;	//  < 0x80_0000
+	wire is_rom_0 = &address[23:17] & is_memory;	// => 0xfe_0000 (64k)
+	wire is_rom_1 = &address[19:17] & is_memory;	//0b1_110_0000_0000_0000_0000 (0x10000, 64k)
+	wire is_rom = is_rom_0 | is_rom_1;
 
 	// Assume all transaction will be 2 byte memory reads.
 	// and all we have to do is drive data and ready.
@@ -157,9 +145,9 @@ module southbridge(
 	// NOP LOOP FROM RESET VECTOR
 	localparam JUMP_BACK_16 = 16'hEEEB;
 	localparam NOP				= 16'h9090;
-	localparam JMPZERO		= 'hFEEB;
+	localparam JMPZERO		= 16'hFEEB;
 	localparam RESET_VECTOR = 24'hFF_FFF0;
-
+	assign ram_data = JMPZERO;
 
 	always @* begin
 		case(sm_ph)
@@ -197,26 +185,52 @@ module southbridge(
 	end
 	reg is_reset_vector;
 	
+	wire is_jmp0;
+	assign is_jmp0 = (data[15:0] & JMPZERO) & is_memory & is_read & ~ready;
 	
-	//assign status_led[6:3] = address[4:1];
+	wire rv_flashy, rom_flashy, ram_flashy;
+	flashy #(.TAP(6)) flashy_reset_vector
+	( .reset_n(reset_n), .in(is_reset_vector), .out(rv_flashy) );
+	
+	flashy #(.TAP(20)) flashy_jmp0
+	( .reset_n(reset_n), .in(is_jmp0), .out(jmp0_flashy) );
+	
+	flashy #(.TAP(20)) flashy_ram
+	( .reset_n(reset_n), .in(is_ram), .out(ram_flashy) );
+	
 	assign status_led[3:0] = sm_ph[3:0];
-`endif
-	wire rom_clk;
-	assign rom_clk = clk & ads & is_control & is_read & is_memory & is_rom;
-	wire is_memory, is_io, is_read, is_write, is_control, is_data;
-	assign is_memory 	= mio; 	assign is_io 		= ~mio;
-	assign is_write 	= wr;		assign is_read 	= ~wr; 	
-	assign is_data 	= dc; 	assign is_control = ~dc;
+	assign status_led[4] = rv_flashy;
+	assign status_led[5] = jmp0_flashy;
+	assign status_led[6] = ram_flashy;
 	
-	wire [15:0] data_wire;
+	wire rom_clk;
+	//assign rom_clk = clk & ads & is_control & is_read & is_memory & is_rom;
+	assign rom_clk = clk & is_active & !is_busy & is_read & is_memory & is_rom;
+
+	wire [15:0] rom_data;
 	rom_fffc00	rom_fffc00_inst (
 	.address ( address[9:1] ),
 	.clock ( rom_clk ),
-	.q ( { data_wire[7:0], data_wire[15:8] } )
+	.q ( { rom_data[7:0], rom_data[15:8] } )
 	);
+endmodule
 
-	
-	
+
+module flashy
+(
+	input reset_n,
+	input in,
+	output out
+);
+	parameter TAP = 10;
+	reg [TAP:0] counter_ff;
+	always @(posedge in or negedge reset_n)
+	if(!reset_n) begin
+		counter_ff <= 0;
+	end else begin
+		counter_ff <= counter_ff + 1'b1;
+	end
+	assign out = counter_ff[TAP];
 endmodule
 
 //module dbl
@@ -232,12 +246,33 @@ endmodule
 
 // TEMPLATE	
 //	always @(posedge clk or negedge reset_n)
-//	begin
+//	if(!reset_n) begin
 //	end else begin
 //	end
 //	
 	
 
-
+//`ifdef RESET_FETCH
+//	// If working properly, LED[1:0] should go to 0b11 indicating the AM386 process tried to fetch
+//	// the reset vector
+//	reg [1:0] rf_state;
+//	
+//	always @(posedge clk or negedge reset_n)
+//	if(!reset_n) begin
+//		addr_oe	 	<= 0;
+//		data_oe 		<= 0;
+//		address_ff 	<= 0;
+//		data_ff 		<= 0;
+//		rf_state		<= 0;
+//		//ready			<= 1;
+//	end else begin
+//		case(rf_state)
+//			0: if(!ads) rf_state <= 1;
+//			1: if(ads)  rf_state <= 2;
+//			2: if(address[23:1] == RESET_VECTOR[23:1]) rf_state <= 3;
+//			default: rf_state <= rf_state;
+//		endcase 
+//	end
+	
 
 

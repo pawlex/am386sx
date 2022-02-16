@@ -20,8 +20,12 @@ flash: altera
 reconfigure: altera
 	../bin/prog.sh reconfigure
 
+reconf: reconfigure
+
 clean:
 	rm -f rom_fffc00 rom_fffc00.hex rom_fffc00.rom rom_fffc00.bin
 
-dis: rom_fffc00.bin
+ndisasm: rom_fffc00.bin
 	ndisasm rom_fffc00.bin | less
+
+dis: ndisasm
