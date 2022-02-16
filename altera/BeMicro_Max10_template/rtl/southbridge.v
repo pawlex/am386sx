@@ -1,28 +1,26 @@
+// 80x86 SX southbridge
+// Paul Komurka
+// pawlex@gmail.com
+
+`define AM386_DEBUG
+//`define RESET_FETCH
 
 module southbridge(
+	input  sys_clk,
 	input  clk,				// 2x clk
 	input  reset_n,		// SB reset
-	output [2:0] int,		// NMI, INTR, RESET
-	inout  [2:0] bcc,		// ADS, NA, READY (out, in, in)
-	input  [3:0] bcd,		// LOCK, MIO, DC, WR
-	inout  [1:0] arb, 	// HOLDA(ck), HOLD (out, in)
-	input	 [1:0] be, 		// H, L
+	output [2:0]  int,		// NMI, INTR, RESET
+	inout  [2:0]  bcc,		// ADS, NA, READY (out, in, in)
+	input  [3:0]  bcd,		// LOCK, MIO, DC, WR
+	inout  [1:0]  arb, 	// HOLDA(ck), HOLD (out, in)
+	input	 [1:0]  be, 		// H, L
 	inout  [23:0] address, // bit0 = x;
 	inout  [15:0] data,
-	//`ifdef AUX
-	//output [3:0] aux, 	// ERROR, BUSY, PEREQ, FLOAT (input)
-	//`endif
-	//`ifdef SMI
-	////TBD
-	//`endif
-	//`ifdef DEBUG
-	//output [15:0] debug,
-	//`endif
-	////
-	output [7:0] status_led
-	//
+	output [7:0]  status_led
+	`ifdef AM386_DEBUG
+	,output [15:0] debug
+	`endif
 );
-
 	// INT
 	wire nmi, intr, reset;
 	assign int[2:0] = { nmi, intr, reset };
@@ -30,14 +28,19 @@ module southbridge(
 	assign intr = 1'b0;
 	assign reset = ~reset_n;
 	// BCC
-	wire ads, na, ready;
+	wire ads;
+	`ifdef RESET_FETCH
+	wire ready;
+	assign ready = 1'b1;
+	`else
+	reg ready;
+	`endif
 	assign bcc[1:0] = { na, ready };
 	assign ads = bcc[2];
 	assign na = 1'b1;
-	assign ready = 1'b1;
 	// BCD
 	wire lock, mio, dc, wr;
-	assign { lock,mio, dc, wr } = bcd[3:0];
+	assign { lock, mio, dc, wr } = bcd[3:0];
 	// ARB
 	wire holda, hold;
 	assign holda = arb[1];
@@ -49,13 +52,51 @@ module southbridge(
 	// ADDR/DATA
 	reg [23:0] address_ff;
 	reg [15:0] data_ff;
+	//wire [23:0] address_out;
+	//wire [15:0] data_out;
+	//wire addr_oe, data_oe;
 	reg addr_oe, data_oe;
-	assign address [23:0] = addr_oe ? address_ff : 24'hzzzzzz;
-	assign data [15:0] 	 = data_oe ? data_ff    : 16'hzzzz;
+	assign address [23:1] = addr_oe ? address_ff [23:1] : 24'hzzzzzz;
+	//assign address [23:1] = 24'hzzzzzz;
+	//assign address [0]    = 1'b0;
+	//assign data [15:0] 	 = data_oe ? data_ff    : 16'hzzzz;
+	assign data [15:0] = data_oe ? data_wire : 16'hzzzz;
+	
 
-	////
-	localparam RESET_VECTOR = 24'hFF_FFFF_FFF0;
-	reg [3:0] state;
+`ifdef AM386_DEBUG
+	`define AM386_DEBUG_PROTOCOL
+	//`define AM386_DEBUG_ROM_ADDRESS
+	//`define AM386_DEBUG_DATA
+	
+	`ifdef AM386_DEBUG_PROTOCOL
+	assign debug[0] = clk;
+	assign debug[1] = reset_n;
+	assign debug[2] = ads;
+	assign debug[3] = ready;
+	assign debug[7:4] = bcd[3:0]; // { lock, mio, dc, wr }
+	assign debug[9:8] = be[1:0];  // H,L
+	assign debug[12:10] = { is_reset_vector, is_ram, is_rom };
+	assign debug[15:13] = 0;
+	`endif
+	
+	`ifdef AM386_DEBUG_ROM_ADDRESS
+	assign debug[0] = clk;
+	assign debug[1] = reset_n;
+	assign debug[2] = ads;
+	assign debug[3] = ready;
+	assign debug[15:4] = address[9:1];
+	`endif
+	`ifdef AM386_DEBUG_DATA
+	assign debug[0] = ads;
+	assign debug[15:1] = data[15:1];
+	`endif
+
+`endif
+	
+`ifdef RESET_FETCH
+	// If working properly, LED[1:0] should go to 0b11 indicating the AM386 process tried to fetch
+	// the reset vector
+	reg [1:0] rf_state;
 	
 	always @(posedge clk or negedge reset_n)
 	if(!reset_n) begin
@@ -63,17 +104,140 @@ module southbridge(
 		data_oe 		<= 0;
 		address_ff 	<= 0;
 		data_ff 		<= 0;
-		state 		<= 0;
+		rf_state		<= 0;
+		//ready			<= 1;
 	end else begin
-		case(state)
-			0: if(!ads) state <= 1;
-			1: if(ads)  state <= 2;
-			2: if(address[23:1] == RESET_VECTOR[23:1]) state <= 3;
-			default: state <= state;
+		case(rf_state)
+			0: if(!ads) rf_state <= 1;
+			1: if(ads)  rf_state <= 2;
+			2: if(address[23:1] == RESET_VECTOR[23:1]) rf_state <= 3;
+			default: rf_state <= rf_state;
 		endcase 
 	end
 	
-	assign status_led[1:0] = state [1:0];
+	assign status_led[1:0] = rf_state [1:0];
 	assign status_led[3:2] = { holda, hold };
 	
+`else
+	
+	// BUS CYCLE PHASE
+	localparam T0  = 4'b0001; // IDLE
+	localparam T1  = 4'b0010; // T1
+	localparam T2  = 4'b0100; // T2
+	localparam T25 = 4'b1000;
+	
+	reg [3:0] sm_ph;
+	always @(posedge clk or negedge reset_n)
+	if(!reset_n) begin
+		sm_ph <= T0;
+	end else begin
+		case(sm_ph)
+			T0: if(!ads)   sm_ph <= T1;
+			T1: if( ads)   sm_ph <= T2;
+			T2: 				sm_ph <= T25;
+			T25: if(ready) sm_ph <= T0;
+		endcase
+	end
+//
+	// 8MB of physical DRAM
+	localparam DRAM_BASE = 24'h000000;
+	localparam DRAM_SIZE = 24'h800000; // 0b1000_0000_0000_0000_0000_0000
+	// 128K of logical ROM, phyiscally mapped top-down.
+	localparam ROM_BASE  = 24'hfe0000; // 0b1111_1110_0000_0000_0000_0000
+	localparam ROM_SIZE  = 18'h20000;  // 0b0000_0010_0000_0000_0000_0000
+
+	// Address decode
+	wire is_ram = !address[23];    //  < 0x80_0000
+	wire is_rom = &address[23:17]; // => 0xfe_0000
+
+
+	// Assume all transaction will be 2 byte memory reads.
+	// and all we have to do is drive data and ready.
+	
+	// NOP LOOP FROM RESET VECTOR
+	localparam JUMP_BACK_16 = 16'hEEEB;
+	localparam NOP				= 16'h9090;
+	localparam JMPZERO		= 'hFEEB;
+	localparam RESET_VECTOR = 24'hFF_FFF0;
+
+
+	always @* begin
+		case(sm_ph)
+			T1: begin
+				data_oe = 1;
+				ready	  = 0;
+			end
+			T2: begin
+				data_oe = 1;
+				ready = 0;
+			end
+			T25: begin
+				data_oe = 1;
+				ready = 1;
+			end
+			default: begin
+				data_oe = 0;
+				ready	  = 1;
+			end
+		endcase
+		//
+		//
+		case(address[23:1])
+			RESET_VECTOR[23:1]: begin
+				is_reset_vector=1;
+				//data_ff = JMPZERO;
+				data_ff = JUMP_BACK_16;
+			end
+			default: begin
+				is_reset_vector=0;
+				data_ff = NOP;
+			end
+		endcase
+	//
+	end
+	reg is_reset_vector;
+	
+	
+	//assign status_led[6:3] = address[4:1];
+	assign status_led[3:0] = sm_ph[3:0];
+`endif
+	wire rom_clk;
+	assign rom_clk = clk & ads & is_control & is_read & is_memory & is_rom;
+	wire is_memory, is_io, is_read, is_write, is_control, is_data;
+	assign is_memory 	= mio; 	assign is_io 		= ~mio;
+	assign is_write 	= wr;		assign is_read 	= ~wr; 	
+	assign is_data 	= dc; 	assign is_control = ~dc;
+	
+	wire [15:0] data_wire;
+	rom_fffc00	rom_fffc00_inst (
+	.address ( address[9:1] ),
+	.clock ( rom_clk ),
+	.q ( { data_wire[7:0], data_wire[15:8] } )
+	);
+
+	
+	
 endmodule
+
+//module dbl
+//(
+//	input  clk,
+//	input  in,
+//	output out
+//);
+//	reg in_ff;
+//	always @(posedge clk) in_ff <= in;
+//	assign out = in ^ in_ff;
+//endmodule
+
+// TEMPLATE	
+//	always @(posedge clk or negedge reset_n)
+//	begin
+//	end else begin
+//	end
+//	
+	
+
+
+
+

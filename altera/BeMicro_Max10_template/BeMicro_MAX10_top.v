@@ -27,17 +27,10 @@
 `define ENABLE_GPIO_J4
 `define ENABLE_PMOD
 `define AM386_SX
-//`define ENABLE_CHIPSCOPE
 `define DESIGN_LEVEL_RESET
+`define ENABLE_CHIPSCOPE
 
 module BeMicro_MAX10_top (
-
-	/* Clock inputs, SYS_CLK = 50MHz, USER_CLK = 24MHz */	
-`ifdef ENABLE_CLOCK_INPUTS
-	//Voltage Level 3.3V
-	input SYS_CLK,  // 50MHz oscillator at position Y1.
-	input USER_CLK, // USER_CLK oscillator is not connected. Postition Y2.
-`endif
 
 `ifdef	ENABLE_DAC_SPI_INTERFACE
 	/* DAC, 12-bit, SPI interface (AD5681) */
@@ -267,20 +260,18 @@ module BeMicro_MAX10_top (
 	inout [3:0] PMOD_A,
 	inout [3:0] PMOD_B,
 	inout [3:0] PMOD_C,
-	inout [3:0] PMOD_D
+	inout [3:0] PMOD_D,
+`endif
+
+	/* Clock inputs, SYS_CLK = 50MHz, USER_CLK = 24MHz */	
+`ifdef ENABLE_CLOCK_INPUTS
+	//Voltage Level 3.3V
+	input SYS_CLK,  // 50MHz oscillator at position Y1.
+	input USER_CLK // USER_CLK oscillator is not connected. Postition Y2.
 `endif
 
 );
-
-//`define GPIO_J4_ODD  { GPIO_J4_11, GPIO_J4_13, GPIO_J4_15, GPIO_J4_19, GPIO_J4_21, GPIO_J4_23, GPIO_J4_27, GPIO_J4_29, GPIO_J4_31, GPIO_J4_35, GPIO_J4_37, GPIO_J4_39, }
-//`define GPIO_J4_EVEN { GPIO_J4_12, GPIO_J4_14, GPIO_J4_16, GPIO_J4_20, GPIO_J4_22, GPIO_J4_24, GPIO_J4_28, GPIO_J4_30, GPIO_J4_32, GPIO_J4_36, GPIO_J4_38, GPIO_J4_40, }
 //
-//assign `GPIO_J4_EVEN = {clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0,clk2p0};
-//assign `GPIO_J4_ODD  = {clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0,clk10p0};
-//
-//assign GPIO_A = reset;
-//assign GPIO_B = reset_n;
-
 `ifdef PLL0
 	wire clk80p0, clk40p0, clk20p0, clk10p0, clk2p0, pll0_lock;
 	pll0	pll0_inst 
@@ -350,10 +341,23 @@ module BeMicro_MAX10_top (
 	//
 	wire am_address_0;
 	wire [7:0] am386_status_led;
-	assign `AM386_CLK = clk0012p0;
+	
+	//`define AM386_VERY_SLOW_CLOCK
+	`ifdef AM386_VERY_SLOW_CLOCK
+	reg [3:0] foo;
+	always @(posedge clk0012p0) foo <= foo + 1;
+	assign `AM386_CLK = foo[2]; // 3 = 75Hz, 2 = 150Hz, 1 = 300Hz, 0 = 600Hz
+	localparam SYS_CLK_DIV = 'd10;
+	`else
+	//assign `AM386_CLK = clk0012p0;
+	assign `AM386_CLK = clk2p0;
+	//assign `AM386_CLK = clk80p0; // WORKS in a JMP-16 loop.
+	localparam SYS_CLK_DIV = 'd1000;
+	`endif
 	//
 	southbridge sb 
 	(
+		.sys_clk(SYS_CLK),
 		.clk(`AM386_CLK),
 		.reset_n(reset_n),
 		.int(`AM386_INT),		// NMI, INTR, RESET
@@ -363,23 +367,26 @@ module BeMicro_MAX10_top (
 		.be(`AM386_BE), 		// H, L
 		.address( { `AM386_ADDRESS_X, `AM386_ADDRESS_H, `AM386_ADDRESS_L } ), // bit0 = x;
 		.data( { `AM386_DATA_H, `AM386_DATA_L } ),
-		.status_led(am386_status_led)
+		.status_led(am386_status_led),
+		.debug(DEBUG)
 	);
 
 `endif
 
 `ifdef ENABLE_CHIPSCOPE
-	`define DEBUG_LO { GPIO_08, GPIO_07, GPIO_06,    GPIO_05,    GPIO_04,    GPIO_03,    GPIO_02, GPIO_01 }
-	`define DEBUG_HI { GPIO_11, GPIO_12, GPIO_J4_13, GPIO_J4_14, GPIO_J4_11, GPIO_J4_12, GPIO_10, GPIO_09 }
+	wire[15:0] DEBUG;
+	assign { PMOD_C[3:0], PMOD_D[3:0], PMOD_A[3:0], PMOD_B[3:0] } = DEBUG[15:0];
+`endif
+`ifdef ENABLE_CHIPSCOPE_DEBUG
+	reg[15:0] cntr_cs; always @(posedge SYS_CLK) cntr_cs <= cntr_cs + 1'b1;
+	assign DEBUG = cntr_cs;
 `endif
 
-`ifdef ENABLE_CHIPSCOPE
-	wire [15:0] DEBUG; assign {`DEBUG_HI,`DEBUG_LO} = DEBUG[15:0];
-`endif
 
 `ifdef DESIGN_LEVEL_RESET
 	/* TODO:  Find out how to use Altera GSR */
 	parameter SYS_CLK_FREQ = 'd50_000_000;
+	//localparam SYS_CLK_DIV = 'd1000;
 	wire reset,reset_n;assign reset = ~reset_n;assign reset_n = user_reset_cpl;
 	reg [25:0] user_reset_cntr;reg [0:0] user_reset_cpl;
 	wire user_reset_button; assign user_reset_button = ~PB[1];
@@ -391,7 +398,7 @@ module BeMicro_MAX10_top (
 			user_reset_cpl  <= 0;
 		end 
 		else begin
-			if(user_reset_cntr == SYS_CLK_FREQ/1000) begin
+			if(user_reset_cntr == SYS_CLK_FREQ/SYS_CLK_DIV) begin
 				user_reset_cpl <= 1;
 			end else begin
 				user_reset_cntr <= user_reset_cntr + 1'b1;
@@ -405,9 +412,9 @@ module BeMicro_MAX10_top (
 reg [7:0] led_o; assign USER_LED[8:1] = ~led_o;
 always @* begin
 	led_o[7]= reset_n; // Assert LED while device is in RESET
-	led_o[6]= 1'b0;
-	led_o[5]= 1'b0;
-	led_o[4]= 1'b0;
+	led_o[6]= am386_status_led[6];
+	led_o[5]= am386_status_led[5];
+	led_o[4]= am386_status_led[4];
 	led_o[3]= am386_status_led[3];
 	led_o[2]= am386_status_led[2];
 	led_o[1]= am386_status_led[1];
