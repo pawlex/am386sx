@@ -61,5 +61,32 @@
 - CPU Software
 - Reset fetch / JUMP / NOP
 
+#### Designing a chipset
+- Must control CPU, RAM, ROM, IO
+- Must act as an arbitrator for those busses.
+- Must act as address decoder for special cases (reset vector, rom, ram etc).
+- Must multi-plex interrupt pin and deliver NMI (non-maskable interrupt).
+
+#### Reset fetch and LONG JUMP to ROM region in LONG MODE
+<p>
+The original 8086 only had 20 address lines which means they could only access
+up to 1MB of externaly mapped memory (ram&rom).  CPU used banking (segmentation) 
+to access beyond 2^16 bits (64K), which is why we have CS,DC,ES,FS,GS,SS registers.
+
+ 
+ x86 CPU's start up in REAL MODE and the CPU does a strange but clever thing...
+Set *S register to 0xF000 (0x0F_xxxx)
+Set all address bits high except the last 4.  In this case, it's 24, so 0xFF_FFF0
+Fetch first instruction. **Normally this is nothing more than a jump-table.
+
+ 
+The implications here is the chipset designer must alias the 2 rom areas together for
+both reset fetch and execution from rom to work correctly, as the first non-relative 
+instruction will assume rom is mapped to the top 1MB of memory.
+</p>
+
+![ResetFetchLongJumpNopLoop_CODE](README/am386_reset_fetch_long_jmp_nop_code.png)
+![ResetFetchLongJumpNopLoop_WAVEFORM](README/am386_reset_fetch_long_jmp_nop_wave.png)
+
 ### Reference
 https://web.archive.org/web/20160123145327/https://blog.lse.epita.fr/articles/77-lsepc-intro.html
