@@ -359,7 +359,7 @@ module BeMicro_MAX10_top (
 	localparam SYS_CLK_DIV = 'd1000;
 	`endif
 	//
-	southbridge sb 
+	northbridge nb
 	(
 		.sys_clk(SYS_CLK),
 		.clk(`AM386_CLK),

@@ -1,11 +1,11 @@
-// 80x86 SX southbridge
+// 80x86 SX northbridge
 // Paul Komurka
 // pawlex@gmail.com
 
 `define AM386_DEBUG
 //`define RESET_FETCH
 
-module southbridge(
+module northbridge(
 	input  sys_clk,
 	input  clk,				// 2x clk
 	input  reset_n,		// SB reset

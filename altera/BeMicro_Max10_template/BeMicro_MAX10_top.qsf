@@ -973,7 +973,7 @@ set_location_assignment PIN_U17 -to altera_reserved_lai_0_5
 set_location_assignment PIN_R18 -to altera_reserved_lai_0_6
 set_location_assignment PIN_P18 -to altera_reserved_lai_0_7
 set_global_assignment -name VERILOG_FILE BeMicro_MAX10_top.v
-set_global_assignment -name VERILOG_FILE rtl/southbridge.v
+set_global_assignment -name VERILOG_FILE rtl/northbridge.v
 set_global_assignment -name QIP_FILE ip/pll0.qip
 set_global_assignment -name QIP_FILE ip/pll1.qip
 set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_board_design_timing
