@@ -350,8 +350,12 @@ module BeMicro_MAX10_top (
 	localparam SYS_CLK_DIV = 'd10;
 	`else
 	//assign `AM386_CLK = clk0012p0;
+	`define AM386_2MHz
+	`ifdef AM386_2MHz
 	assign `AM386_CLK = clk2p0;
-	//assign `AM386_CLK = clk80p0; // WORKS in a JMP-16 loop.
+	`else
+	assign `AM386_CLK = clk80p0; // WORKS in a JMP-16 loop.
+	`endif
 	localparam SYS_CLK_DIV = 'd1000;
 	`endif
 	//

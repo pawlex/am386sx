@@ -2,23 +2,24 @@ use16
 org 0x0
 start:          ; 0x0, 0xFF_Fc00
     ;
-    mov dx, 0x80
-    ; deadbeef
-    mov ax, 0xdead
-    out dx, ax
-    mov ax, 0xbeef
-    out dx, ax
-    ; 0x0000
-    xor ax, ax
-    out dx, ax
-    ; CS
-    mov ax, cs
-    out dx, ax
-    ; 0x0000
-    xor ax, ax
-    out dx, ax
-    ;jmp start
-    ;
+    ;out dx, ax
+    ;mov dx, 0x80
+    ;; deadbeef
+    ;mov ax, 0xdead
+    ;out dx, ax
+    ;mov ax, 0xbeef
+    ;out dx, ax
+    ;; 0x0000
+    ;xor ax, ax
+    ;out dx, ax
+    ;; CS
+    ;mov ax, cs
+    ;out dx, ax
+    ;; 0x0000
+    ;xor ax, ax
+    ;out dx, ax
+    ;;jmp start
+    ;;
 fill_with_nops:
     ;align must be a power of 2
     nop
@@ -34,9 +35,9 @@ fill_with_nops:
     nop
     align 16
 reset_vector:
-    mov ax, 0xF000
+    ;mov ax, 0xF000
     ;mov cs, ax
-    jmp fill_with_nops
+    ;jmp fill_with_nops
     jmp 0xF000:0xFC00
     ;jmp fill_with_nops
     ;jmp start

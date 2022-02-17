@@ -66,8 +66,8 @@ module southbridge(
 	assign data_wire	 = is_ram	? ram_data	: 16'hzzzz;
 
 `ifdef AM386_DEBUG
-	//`define AM386_DEBUG_PROTOCOL
-	`define AM386_DEBUG_ROM_ADDRESS
+	`define AM386_DEBUG_PROTOCOL
+	//`define AM386_DEBUG_ROM_ADDRESS
 	//`define AM386_DEBUG_DATA
 	
 	`ifdef AM386_DEBUG_PROTOCOL
@@ -78,7 +78,8 @@ module southbridge(
 	assign debug[7:4] = bcd[3:0]; // { lock, mio, dc, wr }
 	assign debug[9:8] = be[1:0];  // H,L
 	assign debug[12:10] = { is_reset_vector, is_ram, is_rom };
-	assign debug[15:13] = { is_active, is_busy, rom_clk };
+	//assign debug[15:13] = { is_active, is_busy, rom_clk };
+	assign debug[15:13] = { is_nop, is_busy, rom_clk };
 	`endif
 	
 	`ifdef AM386_DEBUG_ROM_ADDRESS
@@ -134,10 +135,10 @@ module southbridge(
 	
 	
 	// This needs some work
-	wire is_ram = !address[23] 	& is_memory;	//  < 0x80_0000
-	wire is_rom_0 = &address[23:17] & is_memory;	// => 0xfe_0000 (64k)
-	wire is_rom_1 = &address[19:17] & is_memory;	//0b1_110_0000_0000_0000_0000 (0x10000, 64k)
-	wire is_rom = is_rom_0 | is_rom_1;
+	//wire is_ram = !address[23] & is_memory;	//  < 0x80_0000
+	//wire is_rom_0 = &address[23:17] & is_memory;	// => 0xfe_0000 (64k)
+	//wire is_rom_1 = &address[19:17] & is_memory;	//0b1_110_0000_0000_0000_0000 (0x10000, 64k)
+	//wire is_rom = is_rom_0 | is_rom_1;
 
 	// Assume all transaction will be 2 byte memory reads.
 	// and all we have to do is drive data and ready.
@@ -147,6 +148,18 @@ module southbridge(
 	localparam NOP				= 16'h9090;
 	localparam JMPZERO		= 16'hFEEB;
 	localparam RESET_VECTOR = 24'hFF_FFF0;
+	
+	// RESERVED BASE
+	localparam XFF_0000 = 24'b1111_1111_0000_0000_0000_0000;
+	localparam X0F_0000 = 24'b0000_1111_0000_0000_0000_0000; //[19:16]
+	// ROM BASE
+	localparam XFF_FC00 = 24'b1111_1111_1111_1100_0000_0000;
+	localparam X0F_FC00 = 24'b0000_1111_1111_1100_0000_0000; //[19:10]
+	
+	assign is_ram 		 = ~is_reserved & !address[23] & is_memory; 
+	assign is_reserved = &address[19:16] & (&address[23:20] | ~address[23:20]) & is_memory;
+	assign is_rom 		 = &address[19:10]  & (&address[23:20] | ~address[23:20]) & is_memory;
+	
 	assign ram_data = JMPZERO;
 
 	always @* begin
@@ -168,23 +181,20 @@ module southbridge(
 				ready	  = 1;
 			end
 		endcase
-		//
-		//
-		case(address[23:1])
-			RESET_VECTOR[23:1]: begin
-				is_reset_vector=1;
-				//data_ff = JMPZERO;
-				data_ff = JUMP_BACK_16;
-			end
-			default: begin
-				is_reset_vector=0;
-				data_ff = NOP;
-			end
-		endcase
-	//
 	end
-	reg is_reset_vector;
-	
+	`define DEBUG_HELPER_LOGIC
+	`ifdef DEBUG_HELPER_LOGIC
+		wire is_reset_vector;
+		wire is_nop;
+		wire is_jmp_zero;
+		
+		assign is_reset_vector = (address[23:1] == RESET_VECTOR[23:1]) | (address[19:1] == RESET_VECTOR[19:1]);
+		assign is_nop = data[15:0] == NOP[15:0] & ads & ~ready;
+		assign is_jmp_zero = data[15:0] == JMPZERO[15:0] & ads & ~ready;
+	`endif
+	//
+	`define FLASHY
+	`ifdef FLASHY
 	wire is_jmp0;
 	assign is_jmp0 = (data[15:0] & JMPZERO) & is_memory & is_read & ~ready;
 	
@@ -202,16 +212,18 @@ module southbridge(
 	assign status_led[4] = rv_flashy;
 	assign status_led[5] = jmp0_flashy;
 	assign status_led[6] = ram_flashy;
+	`endif
 	
 	wire rom_clk;
 	//assign rom_clk = clk & ads & is_control & is_read & is_memory & is_rom;
 	assign rom_clk = clk & is_active & !is_busy & is_read & is_memory & is_rom;
+	//assign rom_clk = clk & is_active;
 
 	wire [15:0] rom_data;
 	rom_fffc00	rom_fffc00_inst (
-	.address ( address[9:1] ),
-	.clock ( rom_clk ),
-	.q ( { rom_data[7:0], rom_data[15:8] } )
+		.address ( address[9:1] ),
+		.clock ( rom_clk ),
+		.q ( { rom_data[7:0], rom_data[15:8] } )
 	);
 endmodule
 
