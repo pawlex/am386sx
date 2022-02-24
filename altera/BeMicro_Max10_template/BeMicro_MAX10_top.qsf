@@ -972,19 +972,23 @@ set_location_assignment PIN_U18 -to altera_reserved_lai_0_4
 set_location_assignment PIN_U17 -to altera_reserved_lai_0_5
 set_location_assignment PIN_R18 -to altera_reserved_lai_0_6
 set_location_assignment PIN_P18 -to altera_reserved_lai_0_7
-set_global_assignment -name VERILOG_FILE BeMicro_MAX10_top.v
-set_global_assignment -name VERILOG_FILE rtl/northbridge.v
-set_global_assignment -name QIP_FILE ip/pll0.qip
-set_global_assignment -name QIP_FILE ip/pll1.qip
 set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_board_design_timing
 set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_board_design_symbol
 set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_board_design_signal_integrity
 set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_board_design_boundary_scan
-set_global_assignment -name QIP_FILE ip/rom_fffc00.qip
 set_global_assignment -name READ_OR_WRITE_IN_BYTE_ADDRESS ON
+
+set_global_assignment -name VERILOG_FILE rtl/nios_system_sdram.v
+set_global_assignment -name VERILOG_FILE BeMicro_MAX10_top.v
+set_global_assignment -name VERILOG_FILE rtl/northbridge.v
+set_global_assignment -name QIP_FILE ip/pll0.qip
+set_global_assignment -name QIP_FILE ip/pll1.qip
+set_global_assignment -name QIP_FILE ip/rom_fffc00.qip
 set_global_assignment -name CDF_FILE ../../sw/bin/sof_chain.cdf
 set_global_assignment -name CDF_FILE ../../sw/bin/pof_chain_all.cdf
 set_global_assignment -name CDF_FILE ../../sw/bin/pof_chain_cfm0.cdf
 set_global_assignment -name CDF_FILE ../../sw/bin/pof_chain_ufm.cdf
 set_global_assignment -name CDF_FILE output_files/felix_chain_remote.cdf
+set_global_assignment -name QIP_FILE ip/ram_000000.qip
+set_global_assignment -name VERILOG_FILE rtl/flashy.v
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

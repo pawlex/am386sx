@@ -1,89 +1,71 @@
-; The original 8086 only had 20 address lines which means they could only access
-; up to 1MB of externaly mapped memory (ram&rom).  CPU used banking (segmentation) 
-; to access beyond 2^16 bits (64K), which is why we have CS,DC,ES,FS,GS,SS registers.
-;
-; x86 CPU's start up in REAL MODE and the CPU does a strange but clever thing...
-; Set *S register to 0xF000 (0x0F_xxxx)
-; Set all address bits high except the last 4.  In this case, it's 24, so 0xFF_FFF0
-; Fetch first instruction. **Normally this is nothing more than a jump-table.
-;
-; The implications here is the chipset designer must alias the 2 rom areas together for
-; both reset fetch and execution from rom to work correctly, as the first non-relative 
-; instruction will assume rom is mapped to the top 1MB of memory.
+[BITS 16]       ; We need 16-bit intructions for Real mode
+
+[ORG 0xFFC00]    ; ROM LIVES AT 0x0F_FC00 and 0xFF_FC00
+
+        cli                     ; Disable interrupts, we want to be alone
+
+        xor ax, ax
+        mov bx, ax
+        mov cx, ax
+        mov dx, ax
+        mov ax, 0xF000
+        mov ds, ax              ; Set DS-register to 0xF000 - used by lgdt
+
+        lgdt [gdt_desc]         ; Load the GDT descriptor
+
+        mov eax, cr0            ; Copy the contents of CR0 into EAX
+        or eax, 1               ; Set bit 0
+        mov cr0, eax            ; Copy the contents of EAX into CR0
+
+        jmp dword 0x8:clear_pipe
+
+[BITS 32]                       ; We now need 32-bit instructions
+clear_pipe:
+        mov ax, 0x10            ; Save data segment identifyer
+        mov ds, ax              ; Move a valid data segment into the data segment register
+        mov ss, ax              ; Move a valid data segment into the stack segment register
+        mov esp, 0xF7FF0        ; STACK LIVES IN SRAM 0xfF_F000 - 0xfF_F7FF
+
+exit_point:
+        jmp 0x8:0xFFC60         ; next portion in ROM
+trap:
+        align 2
+        jmp $                ; Loop, self-jump
 
 
-; 1KB (0x400) of boot rom.  0x0 - 0xC00
+gdt:                    ; Address for the GDT
 
-use16
-org 0x0
-start:          ; 0xFF_FC00 | 0x0F_FC00
-    ;
-    ; 
-nops:
-    ; align fills un-aligned area with nops ( 0x90 ).  Must be a power of 2.
-    nop
-    align 512
-    nop
-    align 256
-    nop
-    align 128
-    nop
-    align 64
-    nop
-    align 32
-    nop
-    align 16
-reset_vector:   ; 0xFF_FFF0 | 0xF0_FFF0
-    jmp 0xF000:0xFC00
-    align 16
+gdt_null:               ; Null Segment
+        dw 0
+        dw 0
+        db 0
+        db 0
+        db 0
+        db 0
 
+gdt_code:               ; Code segment, read/execute, nonconforming
+        dw 0FFFFh
+        dw 0
+        db 0
+        db 10011010b
+        db 11001111b
+        db 0
 
+gdt_data:               ; Data segment, read/write, expand down
+        dw 0FFFFh
+        dw 0
+        db 0
+        db 10010010b
+        db 11001111b
+        db 0
 
-
-
+gdt_end:                ; Used to calculate the size of the GDT
 
 
 
+gdt_desc:                       ; The GDT descriptor
+        dw gdt_end - gdt - 1    ; Limit (size)
+        dd gdt                  ; Address of the GDT
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    ;jmp fill_with_nops
-    ;jmp start
-    ;jmp $
-
-    ;mov ax, 0xF000
-    ;mov cs, ax
-    ;jmp fill_with_nops
-    ;
-    ;out dx, ax
-    ;mov dx, 0x80
-    ;; deadbeef
-    ;mov ax, 0xdead
-    ;out dx, ax
-    ;mov ax, 0xbeef
-    ;out dx, ax
-    ;; 0x0000
-    ;xor ax, ax
-    ;out dx, ax
-    ;; CS
-    ;mov ax, cs
-    ;out dx, ax
-    ;; 0x0000
-    ;xor ax, ax
-    ;out dx, ax
-    ;;jmp start
-    ;;
+payload:
+align 16

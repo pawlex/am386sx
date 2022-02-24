@@ -1,6 +1,6 @@
 [General]
 decode_signals=0
-meta_objs=1
+meta_objs=6
 views=1
 
 [D0]
@@ -29,7 +29,7 @@ color=4287582722
 conv_options=0
 conversion_type=0
 enabled=true
-name=is_ram
+name=is_sram
 
 [D12]
 color=4291559424
@@ -43,35 +43,35 @@ color=4294277376
 conv_options=0
 conversion_type=0
 enabled=true
-name=rom_clk
+name=is_jmp_0
 
 [D14]
 color=4293776384
 conv_options=0
 conversion_type=0
 enabled=true
-name=is_bsy
+name=is_nop
 
 [D15]
 color=4285780502
 conv_options=0
 conversion_type=0
 enabled=true
-name=is_actv
+name=is_dead
 
 [D2]
 color=4291559424
 conv_options=0
 conversion_type=0
 enabled=true
-name=ads#
+name=ads#_ram_we#
 
 [D3]
 color=4294277376
 conv_options=0
 conversion_type=0
 enabled=true
-name=rdy#
+name=rdy#_ram_re#
 
 [D4]
 color=4293776384
@@ -85,35 +85,35 @@ color=4285780502
 conv_options=0
 conversion_type=0
 enabled=true
-name=d/c#
+name=d/c#_ram_valid
 
 [D6]
 color=4281623972
 conv_options=0
 conversion_type=0
 enabled=true
-name=m/io#
+name=m/io#_ram_wait_req
 
 [D7]
 color=4285878395
 conv_options=0
 conversion_type=0
 enabled=true
-name=LOCK#
+name=is_ram
 
 [D8]
 color=4287138437
 conv_options=0
 conversion_type=0
 enabled=true
-name=BLE#
+name=sram_we
 
 [D9]
 color=4293848812
 conv_options=0
 conversion_type=0
 enabled=true
-name=BHE#
+name=16/8#
 
 [decode_signal0]
 channel0\assigned_signal_name=rdy#
@@ -169,28 +169,56 @@ type=time_marker
 assoc_view=0
 end_time=22 serialization::archive 12 0 0 0 0 38412000 0 16981971 38466639 44423197 71355382 -8 0 0 6
 start_time=22 serialization::archive 12 0 0 0 0 3867999 99999999 99105160 24215212 38284185 13002394 -8 0 0 6
-type=selection
+text=A
+time=22 serialization::archive 12 0 0 0 0 2 41018073 86168209 15918560 60613876 52872362 0 1 0 6
+type=time_marker
+
+[meta_obj2]
+assoc_view=0
+text=B
+time=22 serialization::archive 12 0 0 0 0 30370 0 9444 52849260 81285448 935410 -8 0 0 6
+type=time_marker
+
+[meta_obj3]
+assoc_view=0
+text=B
+time=22 serialization::archive 12 0 0 0 0 30370 0 9444 52849260 81285448 935410 -8 0 0 6
+type=time_marker
+
+[meta_obj4]
+assoc_view=0
+text=E
+time=22 serialization::archive 12 0 0 0 0 46699 46730156 30067927 45384491 51110264 41139430 -8 0 0 6
+type=time_marker
+
+[meta_obj5]
+assoc_view=0
+text=F
+time=22 serialization::archive 12 0 0 0 0 581000 0 60229 59908591 47423179 14428725 -8 0 0 6
+type=time_marker
 
 [view0]
-D0\trace_height=32
-D1\trace_height=32
-D10\trace_height=32
-D11\trace_height=32
-D12\trace_height=32
-D13\trace_height=32
-D14\trace_height=32
-D15\trace_height=32
-D2\trace_height=32
-D3\trace_height=32
-D4\trace_height=32
-D5\trace_height=32
-D6\trace_height=32
-D7\trace_height=32
-D8\trace_height=32
-D9\trace_height=32
-offset=22 serialization::archive 12 0 0 0 0 17653 43705511 8639813 81957420 88530528 61614484 -8 0 0 6
-scale=6.7447609871431911e-08
+D0\trace_height=20
+D1\trace_height=20
+D10\trace_height=20
+D11\trace_height=20
+D12\trace_height=20
+D120\trace_height=20
+D13\trace_height=20
+D14\trace_height=20
+D15\trace_height=20
+D2\trace_height=20
+D20\trace_height=20
+D3\trace_height=20
+D4\trace_height=20
+D5\trace_height=20
+D6\trace_height=20
+D7\trace_height=20
+D8\trace_height=20
+D9\trace_height=20
+offset=22 serialization::archive 12 0 0 0 0 247237 12463167 35408716 64114580 79477274 72103258 -8 0 0 6
+scale=4.3114300895716421e-07
 segment_display_mode=3
-splitter_state=@ByteArray(\0\0\0\xff\0\0\0\x1\0\0\0\x2\0\0\0\x62\0\0\x4\x99\x1\0\0\0\x1\x1\0\0\0\x1\0)
-v_offset=219
+splitter_state=@ByteArray(\0\0\0\xff\0\0\0\x1\0\0\0\x2\0\0\0\xaf\0\0\x4L\x1\0\0\0\x1\x1\0\0\0\x1\0)
+v_offset=-43
 zero_offset=22 serialization::archive 12 0 0 0 0 0 0 0 0 0 0 0 0 0 6

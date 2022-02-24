@@ -11,12 +11,12 @@
 /* User Guide."  Please refer to that document for additional signal details. */
 
 `define ENABLE_CLOCK_INPUTS
-`define PLL0
-`define PLL1
+`define ENABLE_PLL_0
+`define ENABLE_PLL_1
 //`define ENABLE_DAC_SPI_INTERFACE
 //`define ENABLE_TEMP_SENSOR
 //`define ENABLE_ACCELEROMETER
-//`define ENABLE_SDRAM
+`define ENABLE_SDRAM
 //`define ENABLE_SPI_FLASH
 //`define ENABLE_MAX10_ANALOG
 `define ENABLE_PUSHBUTTON
@@ -272,8 +272,8 @@ module BeMicro_MAX10_top (
 
 );
 //
-`ifdef PLL0
-	wire clk80p0, clk40p0, clk20p0, clk10p0, clk2p0, pll0_lock;
+`ifdef ENABLE_PLL_0
+	wire clk80p0, clk40p0, clk20p0, clk10p0, clk2p0, pll_0_lock;
 	pll0	pll0_inst 
 	(
 		.inclk0 ( SYS_CLK ),
@@ -282,17 +282,17 @@ module BeMicro_MAX10_top (
 		.c2 ( clk20p0 ),
 		.c3 ( clk10p0 ),
 		.c4 ( clk2p0 ),
-		.locked ( pll0_lock )
+		.locked ( pll_0_lock )
 	);
 `endif
 
-`ifdef PLL1
-	wire clk0012p0, pll1_lock;
+`ifdef ENABLE_PLL_1
+	wire clk0012p0, pll_1_lock;
 	pll1	pll1_inst 
 	(
 		.inclk0 ( SYS_CLK ),
 		.c0 ( clk0012p0 ),  // 1.2KHz 0-deg phase
-		.locked ( pll1_lock )
+		.locked ( pll_1_lock )
 	);
 `endif
 
@@ -372,9 +372,69 @@ module BeMicro_MAX10_top (
 		.address( { `AM386_ADDRESS_X, `AM386_ADDRESS_H, `AM386_ADDRESS_L } ), // bit0 = x;
 		.data( { `AM386_DATA_H, `AM386_DATA_L } ),
 		.status_led(am386_status_led),
-		.debug(DEBUG)
+		.debug(DEBUG),
+		// SDRAM INTERFACE
+		.az_addr(i_addr),		//22
+		.az_be_n(i_be_n),		//2
+		.az_data(i_data),		//16
+		.az_rd_n(i_rd_n),
+		.az_wr_n(i_wr_n),
+		// outputs:
+		.za_data(o_data), 		//16
+		.za_valid(o_valid),
+		.za_waitrequest(o_wait_req)
 	);
-
+`endif
+	
+	`ifdef ENABLE_SDRAM
+	assign SDRAM_CLK = clk2p0;
+	//assign SDRAM_CLK = clk120p0;
+	////assign SDRAM_CLK = SYS_CLK;
+	wire i_rd_n, i_wr_n, o_valid, o_wait_req;
+	wire [15:0] i_data, o_data;
+	wire [21:0] i_addr;
+	wire [1:0]  i_be_n; // Same as DRAM Data Mask
+	//sdram_init_reader_writer mem_init (
+	//	.clk(SDRAM_CLK),
+	//	.reset_n(reset_n),
+	//	.i_valid(o_valid),
+	//	.i_wait_req(o_wait_req),
+	//	.i_data(o_data),
+	//	.i_trigger(1'b1),
+	//	.o_rd_n(i_rd_n),
+	//	.o_wr_n(i_wr_n),
+	//	.o_data(i_data),
+	//	.o_addr(i_addr),
+	//	.o_be_n(i_be_n),
+	//	.o_error(o_ram_error),
+	//	.o_ram_reading(o_ram_reading),
+	//	.o_ram_writing(o_ram_writing),
+	//	.o_read_error_count(o_read_error_count),
+	//	.o_debug(DEBUG)
+	//);
+	nios_system_sdram sdram_0 (
+		// inputs:
+		.az_addr(i_addr),		//22
+		.az_be_n(i_be_n),		//2
+		.az_data(i_data),		//16
+		.az_rd_n(i_rd_n),
+		.az_wr_n(i_wr_n),
+		.clk(SDRAM_CLK),
+		.reset_n(reset_n),
+		// outputs:
+		.za_data(o_data), 		//16
+		.za_valid(o_valid),
+		.za_waitrequest(o_wait_req),
+		.zs_addr(SDRAM_A), 		//12
+		.zs_ba(SDRAM_BA),		//2
+		.zs_cas_n(SDRAM_CASn),
+		.zs_cke(SDRAM_CKE),
+		.zs_cs_n(SDRAM_CSn),
+		.zs_dq(SDRAM_DQ),	//16 b'z
+		.zs_dqm({SDRAM_DQMH,SDRAM_DQML}),		//2
+		.zs_ras_n(SDRAM_RASn),
+		.zs_we_n(SDRAM_WEn)
+		);
 `endif
 
 `ifdef ENABLE_CHIPSCOPE
@@ -390,11 +450,10 @@ module BeMicro_MAX10_top (
 `ifdef DESIGN_LEVEL_RESET
 	/* TODO:  Find out how to use Altera GSR */
 	parameter SYS_CLK_FREQ = 'd50_000_000;
-	//localparam SYS_CLK_DIV = 'd1000;
-	wire reset,reset_n;assign reset = ~reset_n;assign reset_n = user_reset_cpl;
+	wire reset,reset_n;assign reset = ~reset_n;
+	assign reset_n = (user_reset_cpl `ifdef ENABLE_PLL_0 & pll_0_lock `endif `ifdef ENABLE_PLL_1 & pll_1_lock `endif);
 	reg [25:0] user_reset_cntr;reg [0:0] user_reset_cpl;
 	wire user_reset_button; assign user_reset_button = ~PB[1];
-	//wire user_debug_counter; assign user_debug_counter = ~PB[2];
 
 	always @(posedge SYS_CLK or posedge user_reset_button) begin
 		if(user_reset_button) begin
