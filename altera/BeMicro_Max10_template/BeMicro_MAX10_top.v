@@ -27,6 +27,7 @@
 `define ENABLE_GPIO_J4
 `define ENABLE_PMOD
 `define AM386_SX
+//`define AM386_VERY_SLOW_CLOCK
 `define DESIGN_LEVEL_RESET
 `define ENABLE_CHIPSCOPE
 
@@ -342,25 +343,28 @@ module BeMicro_MAX10_top (
     wire am_address_0;
     wire [7:0] am386_status_led;
     
-    //`define AM386_VERY_SLOW_CLOCK
-    `ifdef AM386_VERY_SLOW_CLOCK
-    reg [3:0] foo;
-    always @(posedge clk0012p0) foo <= foo + 1;
-    assign `AM386_CLK = foo[2]; // 3 = 75Hz, 2 = 150Hz, 1 = 300Hz, 0 = 600Hz
-    localparam SYS_CLK_DIV = 'd10;
-    `else
-    //assign `AM386_CLK = clk0012p0;
-    `define AM386_FASTCLK clk80p0
-    `define AM386_2MHz
-    `ifdef AM386_2MHz
-    assign `AM386_CLK = clk2p0;
-    `else
-    assign `AM386_CLK = `AM386_FASTCLK; // WORKS in a JMP-16 loop.
-    //assign `AM386_CLK = clk80p0; // WORKS in a JMP-16 loop.
-    `endif
+    //`ifdef AM386_VERY_SLOW_CLOCK
+    //reg [3:0] foo;
+    //always @(posedge clk0012p0) foo <= foo + 1;
+    //assign `AM386_CLK = foo[2]; // 3 = 75Hz, 2 = 150Hz, 1 = 300Hz, 0 = 600Hz
+    //localparam SYS_CLK_DIV = 'd10;
+    //`else
+    ////assign `AM386_CLK = clk0012p0;
+    //`define AM386_FASTCLK clk40p0
+    ////`define AM386_2MHz
+    //`ifdef AM386_2MHz
+    //assign `AM386_CLK = clk2p0;
+    //`else
+    //assign `AM386_CLK = `AM386_FASTCLK; // WORKS in a JMP-16 loop.
+    ////assign `AM386_CLK = clk80p0; // WORKS in a JMP-16 loop.
+    //`endif
+    //localparam SYS_CLK_DIV = 'd1000;
+    //`endif
+    ////
+    
     localparam SYS_CLK_DIV = 'd1000;
-    `endif
-    //
+    assign `AM386_CLK = clk2p0;
+    
     northbridge nb
     (
         .clk(`AM386_CLK),
@@ -373,7 +377,7 @@ module BeMicro_MAX10_top (
         .address( { `AM386_ADDRESS_X, `AM386_ADDRESS_H, `AM386_ADDRESS_L } ), // bit0 = x;
         .data( { `AM386_DATA_H, `AM386_DATA_L } ),
         .status_led(am386_status_led),
-        .debug(DEBUG),
+        .debug(DEBUG[10:0]),
         // SDRAM INTERFACE
         .az_addr(i_addr),       //22
         .az_be_n(i_be_n),       //2
@@ -385,6 +389,16 @@ module BeMicro_MAX10_top (
         .za_valid(o_valid),
         .za_waitrequest(o_wait_req)
     );
+    p2s #(.WIDTH(8)) p2sAddressL 
+    (.clk(DEBUG[11]), .reset_n(reset_n), .d_in(`AM386_ADDRESS_L), .run(~GPIO_08), .d_out(DEBUG[12]), .idle(DEBUG[15]) );
+    p2s #(.WIDTH(8)) p2sAddressH 
+    (.clk(DEBUG[11]), .reset_n(reset_n), .d_in(`AM386_ADDRESS_H), .run(~GPIO_08), .d_out(DEBUG[13]), .idle() );
+    p2s #(.WIDTH(8)) p2sAddressX 
+    (.clk(DEBUG[11]), .reset_n(reset_n), .d_in(`AM386_ADDRESS_X), .run(~GPIO_08), .d_out(DEBUG[14]), .idle() );
+    assign DEBUG[11] = clkdiv;
+    reg clkdiv;
+    always @(posedge clk10p0) clkdiv <= ~clkdiv;
+    
 `endif
     
     `ifdef ENABLE_SDRAM

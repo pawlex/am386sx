@@ -978,6 +978,7 @@ set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_
 set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST OFF -section_id eda_board_design_boundary_scan
 set_global_assignment -name READ_OR_WRITE_IN_BYTE_ADDRESS ON
 
+set_global_assignment -name VERILOG_FILE rtl/p2s.v
 set_global_assignment -name VERILOG_FILE rtl/nios_system_sdram.v
 set_global_assignment -name VERILOG_FILE BeMicro_MAX10_top.v
 set_global_assignment -name VERILOG_FILE rtl/northbridge.v

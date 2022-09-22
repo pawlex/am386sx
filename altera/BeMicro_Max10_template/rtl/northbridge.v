@@ -46,7 +46,7 @@ module northbridge(
     wire ads,ready;
     assign bcc[1:0] = { na, ready };
     assign ads = bcc[2];
-    assign na = 1'b1;
+    assign na = 1'b0; // Next Address, Pipeline?
     // BCD
     wire lock, mio, dc, wr;
     assign { lock, mio, dc, wr } = bcd[3:0];
