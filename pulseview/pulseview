@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+URL="https://sigrok.org/download/binary/pulseview"
+IMAGENAME="PulseView-NIGHTLY-x86_64.AppImage"
+
+wget ${URL}/${IMAGENAME} -O /tmp/${IMAGENAME}
+chmod +x /tmp/${IMAGENAME}
+/tmp/${IMAGENAME}
