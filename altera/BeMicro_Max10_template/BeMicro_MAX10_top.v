@@ -362,7 +362,7 @@ module BeMicro_MAX10_top (
     //`endif
     ////
     
-    localparam SYS_CLK_DIV = 'd1000;
+    localparam SYS_CLK_DIV = 'd10000;
     assign `AM386_CLK = clk2p0;
     
     northbridge nb
@@ -377,7 +377,7 @@ module BeMicro_MAX10_top (
         .address( { `AM386_ADDRESS_X, `AM386_ADDRESS_H, `AM386_ADDRESS_L } ), // bit0 = x;
         .data( { `AM386_DATA_H, `AM386_DATA_L } ),
         .status_led(am386_status_led),
-        .debug(DEBUG[10:0]),
+        .debug(DEBUG[8:0]), // 9 bits for protocol
         // SDRAM INTERFACE
         .az_addr(i_addr),       //22
         .az_be_n(i_be_n),       //2
@@ -389,17 +389,28 @@ module BeMicro_MAX10_top (
         .za_valid(o_valid),
         .za_waitrequest(o_wait_req)
     );
-    p2s #(.WIDTH(8)) p2sAddressL 
-    (.clk(DEBUG[11]), .reset_n(reset_n), .d_in(`AM386_ADDRESS_L), .run(~GPIO_08), .d_out(DEBUG[12]), .idle(DEBUG[15]) );
-    p2s #(.WIDTH(8)) p2sAddressH 
-    (.clk(DEBUG[11]), .reset_n(reset_n), .d_in(`AM386_ADDRESS_H), .run(~GPIO_08), .d_out(DEBUG[13]), .idle() );
-    p2s #(.WIDTH(8)) p2sAddressX 
-    (.clk(DEBUG[11]), .reset_n(reset_n), .d_in(`AM386_ADDRESS_X), .run(~GPIO_08), .d_out(DEBUG[14]), .idle() );
-    assign DEBUG[11] = clkdiv;
-    reg clkdiv;
-    always @(posedge clk10p0) clkdiv <= ~clkdiv;
     
-`endif
+    `ifdef ENABLE_CHIPSCOPE
+        reg clkdiv; assign DEBUG[9] = clkdiv; // SPI CLK
+        always @(posedge clk10p0) clkdiv <= ~clkdiv;
+        wire [2:0] BCC; assign BCC = `AM386_BCC;
+        busprobe busprobe0 (
+        //.clk2x(clk2p0), .clk4x(clkdiv), .reset_n(reset_n), .ads_b(GPIO_08), .ready_b(GPIO_10),
+        .clk2x(clk2p0), .clk4x(clkdiv), .reset_n(reset_n), .ads_b(BCC[2]), .ready_b(BCC[0]),
+        .address_i({ `AM386_ADDRESS_X, `AM386_ADDRESS_H, `AM386_ADDRESS_L }), 
+        .data_i({ `AM386_DATA_H, `AM386_DATA_L }), 
+        .BE(`AM386_BE), .control(`AM386_BCD),
+        // DATA
+        .datal_sout(DEBUG[10]), // Data Low
+        .datah_sout(DEBUG[11]), // Data high
+        // Address
+        .addrl_sout(DEBUG[12]), // Address Low
+        .addrh_sout(DEBUG[13]), // Address High
+        .addrx_sout(DEBUG[14]), // Address Extrended[23:16]
+        .cs_n(DEBUG[15]) // SPI Chip select
+    ); // busprobe0
+    `endif // ENABLE_CHIPSCOPE
+`endif // AM386_SX
     
     `ifdef ENABLE_SDRAM
     //assign SDRAM_CLK = clk2p0;
@@ -438,6 +449,7 @@ module BeMicro_MAX10_top (
     assign { PMOD_C[3:0], PMOD_D[3:0], PMOD_A[3:0], PMOD_B[3:0] } = DEBUG[15:0];
 `endif
 `ifdef ENABLE_CHIPSCOPE_DEBUG
+    /* Output counter pattern to debug pins */
     reg[15:0] cntr_cs; always @(posedge SYS_CLK) cntr_cs <= cntr_cs + 1'b1;
     assign DEBUG = cntr_cs;
 `endif

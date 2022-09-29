@@ -1,6 +1,6 @@
 // 80x86 SX northbridge
 // Paul Komurka
-// pawlex@gmail.com
+// github.com/pawlex
 
 `define AM386_DEBUG
 
@@ -46,7 +46,7 @@ module northbridge(
     wire ads,ready;
     assign bcc[1:0] = { na, ready };
     assign ads = bcc[2];
-    assign na = 1'b0; // Next Address, Pipeline?
+    assign na = 1'b1; // active low, Next Address / pipeline?
     // BCD
     wire lock, mio, dc, wr;
     assign { lock, mio, dc, wr } = bcd[3:0];
@@ -74,15 +74,16 @@ module northbridge(
     assign debug[1] = reset_n;
     assign debug[3:2] = {ready, ads};
     //assign debug[3:2] = {az_rd_n, az_wr_n};
-    //assign debug[6:4] = bcd[2:0]; // { mio, dc, wr }
-    assign debug[4] = bcd[0]; // { wr }
-    assign debug[6:5] = { ram_wait_req, ram_valid };
-    assign debug[7] = is_ram;
-    assign debug[8] = sram_we;
-    assign debug[9] = !be[1:0];
-    assign debug[11:10] = { is_sram, is_rom };
-    assign debug[12] = is_reset_vector;
-    assign debug[15:13] = { is_dead, is_nop, is_jmp_zero };
+    assign debug[6:4] = bcd[2:0]; // { mio, dc, wr }
+    assign debug[8:7] = {!be[1], !be[0]}; // Active high byte enables
+    //assign debug[4] = bcd[0]; // { wr }
+    //assign debug[6:5] = { ram_wait_req, ram_valid };
+    //assign debug[7] = is_ram;
+    //assign debug[8] = sram_we;
+    //assign debug[9] = !be[1:0];
+    //assign debug[11:10] = { is_sram, is_rom };
+    //assign debug[12] = is_reset_vector;
+    //assign debug[15:13] = { is_dead, is_nop, is_jmp_zero };
     //assign debug[12:10] = { is_reset_vector, is_ram, is_rom };
     //assign debug[15:13] = { is_active, is_busy, rom_clk };
     //assign debug[15:13] = { is_dead, is_busy, rom_clk };
@@ -122,7 +123,7 @@ module northbridge(
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
     // READY SIGNAL DELAY RELATIVE TO ADS
     //localparam DATA_READY_WIDTH=16;
-    localparam DATA_READY_WIDTH=1;
+    localparam DATA_READY_WIDTH=7;
     reg [DATA_READY_WIDTH:0] data_ready_ff;
     
     always @(posedge clk or negedge reset_n)
