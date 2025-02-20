@@ -152,7 +152,7 @@ INT13_00_15:
 ; FIXED DISK TABLE FOR 32MiB SPI
 MY_FIXED_DISK_TABLE:
         DW 0x0041       ; NUMBER OF SECTORS
-        DB 0x10         ; NUMBER OF HEADS
+        DB MAX_HPC      ; NUMBER OF HEADS
         DW 0x0000       ; RES
         DW 0x0000       ; WR.PRECOMP
         DB 0x00         ; RES
@@ -160,7 +160,7 @@ MY_FIXED_DISK_TABLE:
         DB 0x00         ; RES
         DW 0x00         ; RES
         DW 0x41         ; LANDING ZONE CYL
-        DB 0x3F         ; SECTORS PER TRACK
+        DB MAX_SPT      ; SECTORS PER TRACK
         DB 0x00         ; RES
 ;;
 ;
