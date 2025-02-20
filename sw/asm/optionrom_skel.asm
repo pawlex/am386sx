@@ -8,6 +8,8 @@ MY_DRIVE        EQU 0x80
 MAX_SPT         EQU 63
 MAX_HPC         EQU 16
 MAX_CYL         EQU 1024
+MAX_BPS         EQU 512
+NUM_CYL         EQU 65  ; calculate number of cyls for 32MiB = round((2**20*32) / (MAX_HPC*MAX_SPT*MAX_BPS))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 rom_header:
@@ -151,7 +153,7 @@ INT13_00_15:
 
 ; FIXED DISK TABLE FOR 32MiB SPI
 MY_FIXED_DISK_TABLE:
-        DW 0x0041       ; NUMBER OF SECTORS
+        DW NUM_CYL      ; NUMBER OF CYLINDERS
         DB MAX_HPC      ; NUMBER OF HEADS
         DW 0x0000       ; RES
         DW 0x0000       ; WR.PRECOMP
